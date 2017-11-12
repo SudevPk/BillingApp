@@ -246,7 +246,7 @@
             this.metroTile9.Size = new System.Drawing.Size(248, 114);
             this.metroTile9.TabIndex = 11;
             this.metroTile9.Text = "Purchase";
-            this.metroTile9.TileImage = global::Faa.Properties.Resources.Bag_Present_icon;
+            //this.metroTile9.TileImage = global::Faa.Properties.Resources.Bag_Present_icon;
             this.metroTile9.TileImageAlign = System.Drawing.ContentAlignment.TopRight;
             this.metroTile9.UseSelectable = true;
             this.metroTile9.UseTileImage = true;
@@ -259,7 +259,7 @@
             this.metroTile8.Size = new System.Drawing.Size(248, 114);
             this.metroTile8.TabIndex = 10;
             this.metroTile8.Text = "Stock";
-            this.metroTile8.TileImage = global::Faa.Properties.Resources.Focus_icon;
+            //this.metroTile8.TileImage = global::Faa.Properties.Resources.Focus_icon;
             this.metroTile8.TileImageAlign = System.Drawing.ContentAlignment.TopRight;
             this.metroTile8.UseSelectable = true;
             this.metroTile8.UseTileImage = true;
@@ -272,7 +272,7 @@
             this.metroTile7.Size = new System.Drawing.Size(248, 114);
             this.metroTile7.TabIndex = 9;
             this.metroTile7.Text = "Analysis";
-            this.metroTile7.TileImage = global::Faa.Properties.Resources.Graph_Magnifier_icon;
+            //this.metroTile7.TileImage = global::Faa.Properties.Resources.Graph_Magnifier_icon;
             this.metroTile7.TileImageAlign = System.Drawing.ContentAlignment.TopRight;
             this.metroTile7.UseSelectable = true;
             this.metroTile7.UseTileImage = true;
@@ -285,7 +285,7 @@
             this.metroTile6.Size = new System.Drawing.Size(248, 114);
             this.metroTile6.TabIndex = 8;
             this.metroTile6.Text = "Weather";
-            this.metroTile6.TileImage = global::Faa.Properties.Resources.Cloudy_icon;
+            //this.metroTile6.TileImage = global::Faa.Properties.Resources.Cloudy_icon;
             this.metroTile6.TileImageAlign = System.Drawing.ContentAlignment.TopRight;
             this.metroTile6.UseSelectable = true;
             this.metroTile6.UseTileImage = true;
@@ -299,7 +299,7 @@
             this.metroTile2.Size = new System.Drawing.Size(248, 114);
             this.metroTile2.TabIndex = 5;
             this.metroTile2.Text = "Users";
-            this.metroTile2.TileImage = global::Faa.Properties.Resources.Boss_3_icon;
+            //this.metroTile2.TileImage = global::Faa.Properties.Resources.Boss_3_icon;
             this.metroTile2.TileImageAlign = System.Drawing.ContentAlignment.TopRight;
             this.metroTile2.UseSelectable = true;
             this.metroTile2.UseTileImage = true;
@@ -313,7 +313,7 @@
             this.metroTile1.Size = new System.Drawing.Size(248, 114);
             this.metroTile1.TabIndex = 4;
             this.metroTile1.Text = "Billing";
-            this.metroTile1.TileImage = global::Faa.Properties.Resources.Cashier_2_icon;
+            //this.metroTile1.TileImage = global::Faa.Properties.Resources.Cashier_2_icon;
             this.metroTile1.TileImageAlign = System.Drawing.ContentAlignment.TopRight;
             this.metroTile1.UseSelectable = true;
             this.metroTile1.UseTileImage = true;
