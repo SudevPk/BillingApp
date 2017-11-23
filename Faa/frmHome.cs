@@ -24,6 +24,20 @@ namespace Faa
             InitializeComponent();
             AutoCompleteProducts();
             AutoCompleteUsers();
+            this.metroGrid5.Columns["Date"].DefaultCellStyle.NullValue = System.DateTime.Today.ToString();
+            this.metroGrid5.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
+        }
+
+        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+        }
+
+        private void dgvUserDetails_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            using (SolidBrush b = new SolidBrush(metroGrid5.RowHeadersDefaultCellStyle.ForeColor))
+            {
+                e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b, e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -257,6 +271,91 @@ namespace Faa
 
         private void metroTabPage1_Click(object sender, EventArgs e)
         {
+        }
+
+        private void metroGrid5_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            string Item = "";
+            string Quantity = "1";
+            string RatePerItem = "1";
+            string Total = "0";
+            string GSTRate = "18";
+            string Discount = "0";
+            string ReceivedAmount = "0";
+            string PendingAmount = "0";
+            string Date = System.DateTime.Today.ToString();
+            double grandTotal = 0, pendingTotal = 0;
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = this.metroGrid5.Rows[e.RowIndex];
+                Item = isNullorEmpy(row.Cells["Item"].Value) == true ? row.Cells["Item"].Value.ToString() : "1";
+                if (Item == "Hard Tissue")
+                    row.Cells["RatePerItem"].Value = 100;
+                else
+                    if (Item == "Soft Tissue")
+                        row.Cells["RatePerItem"].Value = 50;
+                Quantity = isNullorEmpy(row.Cells["Quantity"].Value) == true ? row.Cells["Quantity"].Value.ToString() : "1";
+                RatePerItem = isNullorEmpy(row.Cells["RatePerItem"].Value) == true ? row.Cells["RatePerItem"].Value.ToString() : "1";
+                Discount = isNullorEmpy(row.Cells["Discount"].Value) == true ? row.Cells["Discount"].Value.ToString() : "0";
+                Total = (int.Parse(Quantity) * int.Parse(RatePerItem)).ToString();
+                Total = (int.Parse(Total) + (int.Parse(Total) * int.Parse(GSTRate) / 100)).ToString();
+                Total = Discount == "0" ? Total : (int.Parse(Total) - ((int.Parse(Total) * int.Parse(Discount) / 100))).ToString();
+                row.Cells["GSTRate"].Value = GSTRate;
+                row.Cells["TotalAmount"].Value = Total;
+                Date = isNullorEmpy(row.Cells["Date"].Value) == true ? row.Cells["Date"].Value.ToString() : System.DateTime.Today.ToString();
+                row.Cells["Total"].Value = int.Parse(Quantity) * int.Parse(RatePerItem);
+            }
+            for (int i = 0; i < this.metroGrid5.Rows.Count - 1; i++)
+            {
+                grandTotal += Convert.ToDouble(this.metroGrid5.Rows[i].Cells["TotalAmount"].Value);
+            }
+            metroTextBox6.Text = grandTotal.ToString();
+            metroTextBox7.Text = grandTotal.ToString();
+        }
+
+        private bool isNullorEmpy(object value)
+        {
+            if (value != "" && value != null)
+                return true;
+            else
+                return false;
+        }
+
+        private void metroGrid5_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            e.Control.KeyPress -= new KeyPressEventHandler(Column1_KeyPress);
+            var col = this.metroGrid5.CurrentCell.ColumnIndex;
+            if (col == 1 || col == 2 || col == 3 || col == 5 || col == 6) //Desired Column
+            {
+                TextBox tb = e.Control as TextBox;
+                if (tb != null)
+                {
+                    tb.KeyPress += new KeyPressEventHandler(Column1_KeyPress);
+                }
+            }
+        }
+
+        private void Column1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void metroTextBox6_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar);
+        }
+
+        private void metroTextBox7_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar);
+        }
+
+        private void metroTextBox14_TextChanged_1(object sender, EventArgs e)
+        {
+            metroTextBox7.Text = (int.Parse(metroTextBox6.Text) - int.Parse(metroTextBox14.Text)).ToString();
         }
     }
 }
