@@ -119,6 +119,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="UtilityAction.cs" />
     <EmbeddedResource Include="frmHome.resx">
       <DependentUpon>frmHome.cs</DependentUpon>
@@ -126,6 +131,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
@@ -141,42 +147,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Emoticons-2-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Whatsapp-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Phonebook-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Sms-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Train-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\BarTender-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Cash-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Analytics-icon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\search-icon11.png" />
-    <None Include="Resources\search-icon1.png" />
-    <None Include="Resources\search-icon.png" />
-    <None Include="Resources\Cash-register-icon.png" />
-    <None Include="Resources\Focus-icon.png" />
-    <None Include="Resources\Bag-Present-icon.png" />
-    <None Include="Resources\Graph-Magnifier-icon.png" />
-    <None Include="Resources\Cloudy-icon.png" />
-    <None Include="Resources\Cashier-2-icon.png" />
-    <None Include="Resources\Boss-3-icon.png" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
@@ -209,6 +179,110 @@
       <IncludeHash>True</IncludeHash>
       <FileType>File</FileType>
     </PublishFile>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="Microsoft.Office.Core">
+      <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>7</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="Microsoft.Office.Interop.Excel">
+      <Guid>{00020813-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>8</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="VBIDE">
+      <Guid>{0002E157-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>5</VersionMajor>
+      <VersionMinor>3</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Boss-3-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Cashier-2-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\battery-full-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\battery-full-icon1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\chat-2-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\24-hours-phone-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\settings-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\favorite-star-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\location-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\mobile-2-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pin-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\percentage-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\timer-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dollar-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\find-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\stat-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Cloudy-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Bag-Present-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Analytics-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\shopping-bag-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Graph-Magnifier-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\dollar-collection-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Copyright-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\excel-xls-icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\excel-xls-icon1.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

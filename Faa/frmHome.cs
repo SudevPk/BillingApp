@@ -10,11 +10,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Imaging;
+using System.Drawing.Printing;
+using MaterialSkin;
+
+using System.Reflection;
+using System.Runtime.InteropServices;
+
+using Microsoft.Office.Interop.Excel;
+
+using Application1 = Microsoft.Office.Interop.Excel.Application;
 
 namespace Faa
 {
     public partial class frmHome : Form
     {
+        private Application1 xlExcel;
+
+        private Workbook xlWorkBook;
         private Action action = new Action();
         private CrudAction crudAction = new CrudAction();
         private UtilityAction utilityAction = new UtilityAction();
@@ -24,12 +37,8 @@ namespace Faa
             InitializeComponent();
             AutoCompleteProducts();
             AutoCompleteUsers();
-            this.metroGrid5.Columns["Date"].DefaultCellStyle.NullValue = System.DateTime.Today.ToString();
+            AutoCompleteUserMobile();
             this.metroGrid5.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
-        }
-
-        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
         }
 
         private void dgvUserDetails_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
@@ -42,7 +51,7 @@ namespace Faa
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            System.Environment.Exit(1);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -54,10 +63,6 @@ namespace Faa
         private void metroTile1_Click(object sender, EventArgs e)
         {
             metroTabControl1.SelectedTab = metroTabPage2;
-        }
-
-        private void frmHome_Load(object sender, EventArgs e)
-        {
         }
 
         private void metroButton5_Click(object sender, EventArgs e)
@@ -77,11 +82,6 @@ namespace Faa
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            metroGrid3.DataSource = crudAction.selectAllCustomers();
-        }
-
         private void button4_Click(object sender, EventArgs e)
         {
             crudAction.AddDummyData();
@@ -89,7 +89,7 @@ namespace Faa
 
         private void metroButton9_Click(object sender, EventArgs e)
         {
-            metroGrid4.DataSource = crudAction.selectAllBill();
+            metroGrid2.DataSource = crudAction.selectAllBill();
             MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "Transaction Details", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -101,7 +101,7 @@ namespace Faa
 
         private void metroButton4_Click(object sender, EventArgs e)
         {
-            metroGrid4.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
+            metroGrid2.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
             MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -109,10 +109,6 @@ namespace Faa
         {
             //autocomplete function();
             //querry "select product_id,product_code+'-'+product_name as product_name from M_S_PRODUCT where product_name like '%pack%' or product_code like '%pack%'"
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
         }
 
         private void btnSearchProduct_Click(object sender, EventArgs e)
@@ -254,9 +250,20 @@ namespace Faa
             string[] postSource = crudAction.AutoCompleteUsers();
             var source = new AutoCompleteStringCollection();
             source.AddRange(postSource);
-            metroTextBox5.AutoCompleteCustomSource = source;
-            metroTextBox5.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-            metroTextBox5.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            customerName.AutoCompleteCustomSource = source;
+            customerName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            customerName.AutoCompleteSource = AutoCompleteSource.CustomSource;
+        }
+
+        private void AutoCompleteUserMobile()
+        {
+            string[] postSource = crudAction.AutoCompleteUserMobile();
+            var source = new AutoCompleteStringCollection();
+            source.AddRange(postSource);
+            mobileNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            mobileNumber.AutoCompleteCustomSource = source;
+            mobileNumber.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            mobileNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
         }
 
         private void metroTile2_Click(object sender, EventArgs e)
@@ -269,10 +276,6 @@ namespace Faa
             metroTabControl1.SelectedTab = metroTabPage3;
         }
 
-        private void metroTabPage1_Click(object sender, EventArgs e)
-        {
-        }
-
         private void metroGrid5_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             string Item = "";
@@ -281,10 +284,7 @@ namespace Faa
             string Total = "0";
             string GSTRate = "18";
             string Discount = "0";
-            string ReceivedAmount = "0";
-            string PendingAmount = "0";
-            string Date = System.DateTime.Today.ToString();
-            double grandTotal = 0, pendingTotal = 0;
+            double grandTotal = 0;
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = this.metroGrid5.Rows[e.RowIndex];
@@ -302,7 +302,6 @@ namespace Faa
                 Total = Discount == "0" ? Total : (int.Parse(Total) - ((int.Parse(Total) * int.Parse(Discount) / 100))).ToString();
                 row.Cells["GSTRate"].Value = GSTRate;
                 row.Cells["TotalAmount"].Value = Total;
-                Date = isNullorEmpy(row.Cells["Date"].Value) == true ? row.Cells["Date"].Value.ToString() : System.DateTime.Today.ToString();
                 row.Cells["Total"].Value = int.Parse(Quantity) * int.Parse(RatePerItem);
             }
             for (int i = 0; i < this.metroGrid5.Rows.Count - 1; i++)
@@ -327,7 +326,7 @@ namespace Faa
             var col = this.metroGrid5.CurrentCell.ColumnIndex;
             if (col == 1 || col == 2 || col == 3 || col == 5 || col == 6) //Desired Column
             {
-                TextBox tb = e.Control as TextBox;
+                System.Windows.Forms.TextBox tb = e.Control as System.Windows.Forms.TextBox;
                 if (tb != null)
                 {
                     tb.KeyPress += new KeyPressEventHandler(Column1_KeyPress);
@@ -356,6 +355,146 @@ namespace Faa
         private void metroTextBox14_TextChanged_1(object sender, EventArgs e)
         {
             metroTextBox7.Text = (int.Parse(metroTextBox6.Text) - int.Parse(metroTextBox14.Text)).ToString();
+        }
+
+        private void metroButton1_Click(object sender, EventArgs e)
+        {
+            this.CopyBillGrid();
+            exportExcel("Bill");
+        }
+
+        private void CopyBillGrid()
+        {
+            // I'm making this up...
+            this.metroGrid5.SelectAll();
+
+            var data = this.metroGrid5.GetClipboardContent();
+
+            if (data != null)
+            {
+                Clipboard.SetDataObject(data, true);
+            }
+        }
+
+        private void CopyUserGrid()
+        {
+            // I'm making this up...
+            this.metroGrid3.SelectAll();
+
+            var data = this.metroGrid3.GetClipboardContent();
+
+            if (data != null)
+            {
+                Clipboard.SetDataObject(data, true);
+            }
+        }
+
+        private void CopyAllTransactionGrid()
+        {
+            // I'm making this up...
+            this.metroGrid2.SelectAll();
+
+            var data = this.metroGrid2.GetClipboardContent();
+
+            if (data != null)
+            {
+                Clipboard.SetDataObject(data, true);
+            }
+        }
+
+        private void QuitExcel()
+        {
+            if (this.xlWorkBook != null)
+            {
+                try
+                {
+                    this.xlWorkBook.Close();
+                    Marshal.ReleaseComObject(this.xlWorkBook);
+                }
+                catch (COMException)
+                {
+                }
+
+                this.xlWorkBook = null;
+            }
+
+            if (this.xlExcel != null)
+            {
+                try
+                {
+                    this.xlExcel.Quit();
+                    Marshal.ReleaseComObject(this.xlExcel);
+                }
+                catch (COMException)
+                {
+                }
+
+                this.xlExcel = null;
+            }
+        }
+
+        private void metroButton7_Click(object sender, EventArgs e)
+        {
+            metroGrid3.DataSource = crudAction.selectAllCustomers();
+        }
+
+        private void metroButton8_Click(object sender, EventArgs e)
+        {
+            this.CopyUserGrid();
+            exportExcel("User");
+        }
+
+        private void exportExcel(string name)
+        {
+            this.QuitExcel();
+            this.xlExcel = new Application1 { Visible = false };
+            this.xlWorkBook = this.xlExcel.Workbooks.Add(Missing.Value);
+
+            // Copy contents of grid into clipboard, open new instance of excel, a new workbook and sheet,
+            // paste clipboard contents into new sheet.
+
+            var xlWorkSheet = (Worksheet)this.xlWorkBook.Worksheets.Item[1];
+
+            try
+            {
+                var cr = (Range)xlWorkSheet.Cells[1, 1];
+
+                try
+                {
+                    cr.Select();
+                    xlWorkSheet.PasteSpecial(cr, NoHTMLFormatting: true);
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(cr);
+                }
+
+                this.xlWorkBook.SaveAs(Path.Combine(Path.GetTempPath(), name + ".xls"), XlFileFormat.xlExcel5);
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(xlWorkSheet);
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            MessageBox.Show("File Save Successful", "Information", MessageBoxButtons.OK);
+        }
+
+        private void metroButton6_Click(object sender, EventArgs e)
+        {
+            this.CopyAllTransactionGrid();
+            exportExcel("AllTransaction");
+        }
+
+        private void metroTextBox10_TextChanged(object sender, EventArgs e)
+        {
+            System.Data.DataTable dt = crudAction.AutoCompleteBillDetails(mobileNumber.Text);
+            if (dt.Rows.Count > 0)
+            {
+                customerName.Text = dt.Rows[0]["customer_name"].ToString();
+                address.Text = dt.Rows[0]["customer_address"].ToString();
+                email.Text = dt.Rows[0]["customer_email"].ToString();
+            }
         }
     }
 }

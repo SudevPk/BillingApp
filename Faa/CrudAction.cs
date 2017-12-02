@@ -103,6 +103,47 @@ namespace Faa
             }
         }
 
+        public string[] AutoCompleteUserMobile()
+        {
+            DataTable dtUsers = new DataTable();
+            using (var cnn = action.getConnection())
+            {
+                using (SqlCommand cmd = new SqlCommand(@"select customer_phone from  M_S_CUSTOMERS", cnn))
+                {
+                    // create data adapter
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    // this will query your database and return the result to your datatable
+                    da.Fill(dtUsers);
+                    //use LINQ method syntax to pull the Title field from a DT into a string array...
+                    string[] postSource = dtUsers
+                                        .AsEnumerable()
+                                        .Select<System.Data.DataRow, String>(x => x.Field<String>("customer_phone"))
+                                        .ToArray();
+                    cnn.Close();
+                    da.Dispose();
+                    return postSource;
+                }
+            }
+        }
+
+        public DataTable AutoCompleteBillDetails(string mobileNumber)
+        {
+            DataTable dtUsers = new DataTable();
+            using (var cnn = action.getConnection())
+            {
+                using (SqlCommand cmd = new SqlCommand(@"select customer_name,customer_phone,customer_email,customer_address from M_S_CUSTOMERS where customer_phone='" + mobileNumber + "'", cnn))
+                {
+                    // create data adapter
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    // this will query your database and return the result to your datatable
+                    da.Fill(dtUsers);
+                    cnn.Close();
+                    da.Dispose();
+                    return dtUsers;
+                }
+            }
+        }
+
         public DataTable selectAllBill()
         {
             DataTable dataTable = new DataTable();
