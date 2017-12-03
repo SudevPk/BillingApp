@@ -17,17 +17,13 @@ using MaterialSkin;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-using Microsoft.Office.Interop.Excel;
-
-using Application1 = Microsoft.Office.Interop.Excel.Application;
+using Newtonsoft.Json;
+using ClosedXML.Excel;
 
 namespace Faa
 {
     public partial class frmHome : Form
     {
-        private Application1 xlExcel;
-
-        private Workbook xlWorkBook;
         private Action action = new Action();
         private CrudAction crudAction = new CrudAction();
         private UtilityAction utilityAction = new UtilityAction();
@@ -38,12 +34,12 @@ namespace Faa
             AutoCompleteProducts();
             AutoCompleteUsers();
             AutoCompleteUserMobile();
-            this.metroGrid5.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
+            this.billGrid.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
         }
 
         private void dgvUserDetails_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
         {
-            using (SolidBrush b = new SolidBrush(metroGrid5.RowHeadersDefaultCellStyle.ForeColor))
+            using (SolidBrush b = new SolidBrush(billGrid.RowHeadersDefaultCellStyle.ForeColor))
             {
                 e.Graphics.DrawString((e.RowIndex + 1).ToString(), e.InheritedRowStyle.Font, b, e.RowBounds.Location.X + 10, e.RowBounds.Location.Y + 4);
             }
@@ -73,7 +69,7 @@ namespace Faa
                 int id = 121;
                 crudAction.deleteAllCustomers();
                 MetroFramework.MetroMessageBox.Show(this, "\n\nData Deleted", "Delete", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                metroGrid3.DataSource = crudAction.selectAllCustomers();
+                userGrid.DataSource = crudAction.selectAllCustomers();
                 MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -89,19 +85,19 @@ namespace Faa
 
         private void metroButton9_Click(object sender, EventArgs e)
         {
-            metroGrid2.DataSource = crudAction.selectAllBill();
+            allBillGrid.DataSource = crudAction.selectAllBill();
             MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "Transaction Details", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void metroButton3_Click(object sender, EventArgs e)
         {
-            metroGrid3.DataSource = crudAction.SearchCustomerByName(metroTextBox5.Text);
+            userGrid.DataSource = crudAction.SearchCustomerByName(metroTextBox5.Text);
             MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void metroButton4_Click(object sender, EventArgs e)
         {
-            metroGrid2.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
+            allBillGrid.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
             MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -287,7 +283,7 @@ namespace Faa
             double grandTotal = 0;
             if (e.RowIndex >= 0)
             {
-                DataGridViewRow row = this.metroGrid5.Rows[e.RowIndex];
+                DataGridViewRow row = this.billGrid.Rows[e.RowIndex];
                 Item = isNullorEmpy(row.Cells["Item"].Value) == true ? row.Cells["Item"].Value.ToString() : "1";
                 if (Item == "Hard Tissue")
                     row.Cells["RatePerItem"].Value = 100;
@@ -304,12 +300,12 @@ namespace Faa
                 row.Cells["TotalAmount"].Value = Total;
                 row.Cells["Total"].Value = int.Parse(Quantity) * int.Parse(RatePerItem);
             }
-            for (int i = 0; i < this.metroGrid5.Rows.Count - 1; i++)
+            for (int i = 0; i < this.billGrid.Rows.Count - 1; i++)
             {
-                grandTotal += Convert.ToDouble(this.metroGrid5.Rows[i].Cells["TotalAmount"].Value);
+                grandTotal += Convert.ToDouble(this.billGrid.Rows[i].Cells["TotalAmount"].Value);
             }
-            metroTextBox6.Text = grandTotal.ToString();
-            metroTextBox7.Text = grandTotal.ToString();
+            this.grandTotal.Text = grandTotal.ToString();
+            this.pendingAmount.Text = grandTotal.ToString();
         }
 
         private bool isNullorEmpy(object value)
@@ -323,7 +319,7 @@ namespace Faa
         private void metroGrid5_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             e.Control.KeyPress -= new KeyPressEventHandler(Column1_KeyPress);
-            var col = this.metroGrid5.CurrentCell.ColumnIndex;
+            var col = this.billGrid.CurrentCell.ColumnIndex;
             if (col == 1 || col == 2 || col == 3 || col == 5 || col == 6) //Desired Column
             {
                 System.Windows.Forms.TextBox tb = e.Control as System.Windows.Forms.TextBox;
@@ -354,136 +350,154 @@ namespace Faa
 
         private void metroTextBox14_TextChanged_1(object sender, EventArgs e)
         {
-            metroTextBox7.Text = (int.Parse(metroTextBox6.Text) - int.Parse(metroTextBox14.Text)).ToString();
+            pendingAmount.Text = (int.Parse(grandTotal.Text) - int.Parse(receivedAmount.Text)).ToString();
         }
 
         private void metroButton1_Click(object sender, EventArgs e)
         {
-            this.CopyBillGrid();
-            exportExcel("Bill");
-        }
-
-        private void CopyBillGrid()
-        {
-            // I'm making this up...
-            this.metroGrid5.SelectAll();
-
-            var data = this.metroGrid5.GetClipboardContent();
-
-            if (data != null)
+            bool isVaid = validateBill();
+            if (isVaid)
             {
-                Clipboard.SetDataObject(data, true);
+                DataTable billDataTable = new DataTable();
+                billDataTable.Clear();
+                billDataTable.Columns.Add("Item");
+                billDataTable.Columns.Add("Quantity");
+                billDataTable.Columns.Add("RatePerItem");
+                billDataTable.Columns.Add("Discount");
+                billDataTable.Columns.Add("GSTRate");
+                billDataTable.Columns.Add("Total");
+                billDataTable.Columns.Add("TotalAmount");
+                billDataTable.Columns.Add("Sale Date");
+                billDataTable.Columns.Add("Grand Total");
+                billDataTable.Columns.Add("Recieved");
+                billDataTable.Columns.Add("Pending");
+                if (billGrid.Rows.Count != 1)
+                {
+                    DataRow row = billDataTable.NewRow();
+                    for (int item = 0; item < billGrid.Rows.Count - 1; item++)
+                    {
+                        row["Item"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
+                        row["Quantity"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
+                        row["RatePerItem"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
+                        row["GSTRate"] = this.billGrid.Rows[item].Cells["GSTRate"].Value.ToString();
+                        row["Discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
+                        row["Total"] = this.billGrid.Rows[item].Cells["Total"].Value.ToString();
+                        row["TotalAmount"] = this.billGrid.Rows[item].Cells["TotalAmount"].Value.ToString();
+                        billDataTable.Rows.Add(row);
+                    }
+                    DataRow Lastrow = billDataTable.NewRow();
+                    Lastrow["Sale Date"] = this.saleDate.Value;
+                    Lastrow["Grand Total"] = this.grandTotal.Text;
+                    Lastrow["Recieved"] = this.receivedAmount.Text;
+                    Lastrow["Pending"] = this.pendingAmount.Text;
+                    billDataTable.Rows.Add(Lastrow);
+                    var path = @"C:\faaExcel\Bill\";
+                    if (!File.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+                    var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
+                        DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
+                    var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
+                    crudAction.exportExcel(billDataTable, filename);
+                    MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
-        private void CopyUserGrid()
+        private bool validateBill()
         {
-            // I'm making this up...
-            this.metroGrid3.SelectAll();
-
-            var data = this.metroGrid3.GetClipboardContent();
-
-            if (data != null)
+            if (companyName.Text == "")
             {
-                Clipboard.SetDataObject(data, true);
+                MessageBox.Show("Enter Company Name !");
+                companyName.Focus();
+                return false;
             }
-        }
-
-        private void CopyAllTransactionGrid()
-        {
-            // I'm making this up...
-            this.metroGrid2.SelectAll();
-
-            var data = this.metroGrid2.GetClipboardContent();
-
-            if (data != null)
+            else if (customerName.Text == "")
             {
-                Clipboard.SetDataObject(data, true);
+                MessageBox.Show("Enter Customer Name !");
+                customerName.Focus();
+                return false;
             }
-        }
-
-        private void QuitExcel()
-        {
-            if (this.xlWorkBook != null)
+            else if (mobileNumber.Text == "")
             {
-                try
-                {
-                    this.xlWorkBook.Close();
-                    Marshal.ReleaseComObject(this.xlWorkBook);
-                }
-                catch (COMException)
-                {
-                }
-
-                this.xlWorkBook = null;
+                MessageBox.Show("Enter Mobile Number !");
+                mobileNumber.Focus();
+                return false;
             }
-
-            if (this.xlExcel != null)
+            else if (mobileNumber.Text.Length < 10)
             {
-                try
-                {
-                    this.xlExcel.Quit();
-                    Marshal.ReleaseComObject(this.xlExcel);
-                }
-                catch (COMException)
-                {
-                }
-
-                this.xlExcel = null;
+                MessageBox.Show("Enter Valid Mobile Number(10 numbers) !");
+                mobileNumber.Focus();
+                return false;
+            }
+            else if (address.Text == "")
+            {
+                MessageBox.Show("Enter Address !");
+                address.Focus();
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
 
         private void metroButton7_Click(object sender, EventArgs e)
         {
-            metroGrid3.DataSource = crudAction.selectAllCustomers();
+            userGrid.DataSource = crudAction.selectAllCustomers();
         }
 
         private void metroButton8_Click(object sender, EventArgs e)
         {
-            this.CopyUserGrid();
-            exportExcel("User");
-        }
-
-        private void exportExcel(string name)
-        {
-            this.QuitExcel();
-            this.xlExcel = new Application1 { Visible = false };
-            this.xlWorkBook = this.xlExcel.Workbooks.Add(Missing.Value);
-
-            // Copy contents of grid into clipboard, open new instance of excel, a new workbook and sheet,
-            // paste clipboard contents into new sheet.
-
-            var xlWorkSheet = (Worksheet)this.xlWorkBook.Worksheets.Item[1];
-
-            try
+            if (this.userGrid.DataSource != null)
             {
-                var cr = (Range)xlWorkSheet.Cells[1, 1];
-
-                try
+                var dt = (DataTable)this.userGrid.DataSource;
+                //To Get the Default View
+                dt = dt.DefaultView.ToTable();
+                var path = @"C:\faaExcel\User\";
+                if (!File.Exists(path))
                 {
-                    cr.Select();
-                    xlWorkSheet.PasteSpecial(cr, NoHTMLFormatting: true);
+                    Directory.CreateDirectory(path);
                 }
-                finally
-                {
-                    Marshal.ReleaseComObject(cr);
-                }
-
-                this.xlWorkBook.SaveAs(Path.Combine(Path.GetTempPath(), name + ".xls"), XlFileFormat.xlExcel5);
+                var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
+                     DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
+                var filename = path + currentDate + "_User.xlsx";
+                crudAction.exportExcel(dt, filename);
+                MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            finally
+            else
             {
-                Marshal.ReleaseComObject(xlWorkSheet);
+                MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.None);
             }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            MessageBox.Show("File Save Successful", "Information", MessageBoxButtons.OK);
         }
 
         private void metroButton6_Click(object sender, EventArgs e)
         {
-            this.CopyAllTransactionGrid();
-            exportExcel("AllTransaction");
+            if (this.allBillGrid.DataSource != null)
+            {
+                var dt = (DataTable)this.allBillGrid.DataSource;
+                //To Get the Default View
+                dt = dt.DefaultView.ToTable();
+                var path = @"C:\faaExcel\AllBill\";
+                if (!File.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+                var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
+                     DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
+                var filename = path + currentDate + "_AllBill.xlsx";
+                crudAction.exportExcel(dt, filename);
+                MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.None);
+            }
         }
 
         private void metroTextBox10_TextChanged(object sender, EventArgs e)

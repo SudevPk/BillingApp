@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -42,7 +43,8 @@ namespace Faa
             DataTable dataTable = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select * from M_S_CUSTOMERS order by created_date desc", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select  customer_name as Name,customer_phone as Phone,
+                                        customer_email as Email,customer_address as Address,created_date 'Created Date' from M_S_CUSTOMERS order by created_date desc", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -149,7 +151,9 @@ namespace Faa
             DataTable dataTable = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select * from T_D_SALES order by sales_date desc", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select customer_name as Name,customer_phone as Mobile,customer_email as Email,sales_date
+                                             as 'Sale Date',total_amnt as 'Total Amount',amnt_paid as 'Amount paid',current_sales_balance as 'Balance' from T_D_SALES
+                                             T JOIN M_S_CUSTOMERS C ON T.customer_id=C.cust_id order by sales_date desc", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -186,7 +190,9 @@ namespace Faa
             using (var cnn = action.getConnection())
             {
                 cnn.Open();
-                using (SqlCommand cmd = new SqlCommand(@"select * from M_S_CUSTOMERS where customer_name='" + customerName + "'", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select  customer_name as Name,customer_phone as Phone,
+                                        customer_email as Email,customer_address as Address,created_date 'Created Date' from M_S_CUSTOMERS
+                                        where customer_name='" + customerName + "'", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -205,7 +211,9 @@ namespace Faa
             using (var cnn = action.getConnection())
             {
                 cnn.Open();
-                using (SqlCommand cmd = new SqlCommand(@"select * from T_D_SALES T JOIN M_S_CUSTOMERS C ON T.customer_id=C.cust_id where customer_id='" + billId + "'", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select customer_name as Name,customer_phone as Mobile,customer_email as Email,sales_date
+                                             as 'Sale Date',total_amnt as 'Total Amount',amnt_paid as 'Amount paid',current_sales_balance as 'Balance' from T_D_SALES
+                                             T JOIN M_S_CUSTOMERS C ON T.customer_id=C.cust_id where customer_name='" + billId + "'", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -298,6 +306,15 @@ namespace Faa
                 {
                     cmd.ExecuteNonQuery();
                 }
+            }
+        }
+
+        public void exportExcel(DataTable dt, string filename)
+        {
+            using (var wb = new XLWorkbook())
+            {
+                wb.Worksheets.Add(dt, "Data");
+                wb.SaveAs(filename, false);
             }
         }
     }
