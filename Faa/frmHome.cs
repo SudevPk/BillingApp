@@ -58,7 +58,7 @@ namespace Faa
 
         private void metroTile1_Click(object sender, EventArgs e)
         {
-            metroTabControl1.SelectedTab = metroTabPage2;
+            Billing.SelectedTab = metroTabPage2;
         }
 
         private void metroButton5_Click(object sender, EventArgs e)
@@ -264,12 +264,12 @@ namespace Faa
 
         private void metroTile2_Click(object sender, EventArgs e)
         {
-            metroTabControl1.SelectedTab = metroTabPage4;
+            Billing.SelectedTab = metroTabPage4;
         }
 
         private void metroTile3_Click(object sender, EventArgs e)
         {
-            metroTabControl1.SelectedTab = metroTabPage3;
+            Billing.SelectedTab = metroTabPage3;
         }
 
         private void metroGrid5_CellValueChanged(object sender, DataGridViewCellEventArgs e)
@@ -509,6 +509,11 @@ namespace Faa
                 address.Text = dt.Rows[0]["customer_address"].ToString();
                 email.Text = dt.Rows[0]["customer_email"].ToString();
             }
+        }
+
+        private void Billing_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -18,10 +18,9 @@ namespace Faa
         /// <returns></returns>
         public SqlConnection getConnection()
         {
-            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDB; AttachDbFilename=|DataDirectory|\App_Data\faaDB.mdf;
-                                        Initial Catalog=faaDB;Integrated Security=True;Pooling=False";
-            string newConString = ConfigurationManager.ConnectionStrings["ConnectionStringFaaDB"].ToString();
-            SqlConnection sqlConnection = new SqlConnection(newConString);
+            string sanConection = @"Data Source=ANUGRAHAA\sqlexpress;Initial Catalog=faa;Integrated Security=True";
+            string newConString = ConfigurationManager.ConnectionStrings["SudevConnectionString"].ToString();
+            SqlConnection sqlConnection = new SqlConnection(sanConection);
             return sqlConnection;
         }
     }
