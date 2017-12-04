@@ -513,7 +513,10 @@ namespace Faa
 
         private void Billing_SelectedIndexChanged(object sender, EventArgs e)
         {
+        }
 
+        private void metroTabPage7_Click(object sender, EventArgs e)
+        {
         }
     }
 }

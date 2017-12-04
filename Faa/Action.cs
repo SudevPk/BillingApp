@@ -18,10 +18,16 @@ namespace Faa
         /// <returns></returns>
         public SqlConnection getConnection()
         {
-            string sanConection = @"Data Source=ANUGRAHAA\sqlexpress;Initial Catalog=faa;Integrated Security=True";
-            string newConString = ConfigurationManager.ConnectionStrings["SudevConnectionString"].ToString();
-            SqlConnection sqlConnection = new SqlConnection(sanConection);
-            return sqlConnection;
+            string conString = "";
+            if (System.Environment.MachineName == "DESKTOP-OL65NEI")
+            {
+                conString = ConfigurationManager.ConnectionStrings["ConnectionStringFaaDB"].ToString();
+            }
+            else
+            {
+                conString = @"Data Source=ANUGRAHAA\sqlexpress;Initial Catalog=faa;Integrated Security=True";
+            }
+            return new SqlConnection(conString);
         }
     }
 }
