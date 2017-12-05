@@ -83,23 +83,23 @@ namespace Faa
             crudAction.AddDummyData();
         }
 
-        private void metroButton9_Click(object sender, EventArgs e)
-        {
-            allBillGrid.DataSource = crudAction.selectAllBill();
-            MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "Transaction Details", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
+        //private void metroButton9_Click(object sender, EventArgs e)
+        //{
+        //    allBillGrid.DataSource = crudAction.selectAllBill();
+        //    MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "Transaction Details", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //}
 
         private void metroButton3_Click(object sender, EventArgs e)
         {
-            userGrid.DataSource = crudAction.SearchCustomerByName(metroTextBox5.Text);
+            userGrid.DataSource = crudAction.SearchCustomerByName(userName.Text);
             MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void metroButton4_Click(object sender, EventArgs e)
-        {
-            allBillGrid.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
-            MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
+        //private void metroButton4_Click(object sender, EventArgs e)
+        //{
+        //    allBillGrid.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
+        //    MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //}
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
@@ -249,6 +249,9 @@ namespace Faa
             customerName.AutoCompleteCustomSource = source;
             customerName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             customerName.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            userName.AutoCompleteCustomSource = source;
+            userName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            userName.AutoCompleteSource = AutoCompleteSource.CustomSource;
         }
 
         private void AutoCompleteUserMobile()
@@ -350,7 +353,7 @@ namespace Faa
 
         private void metroTextBox14_TextChanged_1(object sender, EventArgs e)
         {
-            pendingAmount.Text = (int.Parse(grandTotal.Text) - int.Parse(receivedAmount.Text)).ToString();
+            pendingAmount.Text = (int.Parse(grandTotal.Text == "" ? "0" : grandTotal.Text) - int.Parse(receivedAmount.Text == "" ? "0" : receivedAmount.Text)).ToString();
         }
 
         private void metroButton1_Click(object sender, EventArgs e)
@@ -376,6 +379,7 @@ namespace Faa
                     DataRow row = billDataTable.NewRow();
                     for (int item = 0; item < billGrid.Rows.Count - 1; item++)
                     {
+                        row = billDataTable.NewRow();
                         row["Item"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
                         row["Quantity"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
                         row["RatePerItem"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
@@ -476,29 +480,29 @@ namespace Faa
             }
         }
 
-        private void metroButton6_Click(object sender, EventArgs e)
-        {
-            if (this.allBillGrid.DataSource != null)
-            {
-                var dt = (DataTable)this.allBillGrid.DataSource;
-                //To Get the Default View
-                dt = dt.DefaultView.ToTable();
-                var path = @"C:\faaExcel\AllBill\";
-                if (!File.Exists(path))
-                {
-                    Directory.CreateDirectory(path);
-                }
-                var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
-                     DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
-                var filename = path + currentDate + "_AllBill.xlsx";
-                crudAction.exportExcel(dt, filename);
-                MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.None);
-            }
-        }
+        //private void metroButton6_Click(object sender, EventArgs e)
+        //{
+        //    if (this.allBillGrid.DataSource != null)
+        //    {
+        //        var dt = (DataTable)this.allBillGrid.DataSource;
+        //        //To Get the Default View
+        //        dt = dt.DefaultView.ToTable();
+        //        var path = @"C:\faaExcel\AllBill\";
+        //        if (!File.Exists(path))
+        //        {
+        //            Directory.CreateDirectory(path);
+        //        }
+        //        var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
+        //             DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
+        //        var filename = path + currentDate + "_AllBill.xlsx";
+        //        crudAction.exportExcel(dt, filename);
+        //        MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        //    }
+        //    else
+        //    {
+        //        MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.None);
+        //    }
+        //}
 
         private void metroTextBox10_TextChanged(object sender, EventArgs e)
         {
@@ -521,7 +525,28 @@ namespace Faa
 
         private void metroButton14_Click(object sender, EventArgs e)
         {
+        }
 
+        private void metroButton4_Click(object sender, EventArgs e)
+        {
+            ClearAll();
+        }
+
+        private void ClearAll()
+        {
+            companyName.Text = "";
+            address.Text = "";
+            customerName.Text = "";
+            email.Text = "";
+            city.Text = "";
+            mobileNumber.Text = "";
+            district.Text = "";
+            totalQuantity.Text = "";
+            sumTotal.Text = "";
+            grandTotal.Text = "";
+            receivedAmount.Text = "";
+            pendingAmount.Text = "";
+            state.SelectedValue = "";
         }
     }
 }
