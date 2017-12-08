@@ -30,6 +30,7 @@ namespace Faa
 
         public frmHome()
         {
+
             InitializeComponent();
             AutoCompleteProducts();
             AutoCompleteUsers();
@@ -91,15 +92,84 @@ namespace Faa
 
         private void metroButton3_Click(object sender, EventArgs e)
         {
-            userGrid.DataSource = crudAction.SearchCustomerByName(userName.Text);
-            MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (userName.Text.ToString().Length<=0) {
+                MetroFramework.MetroMessageBox.Show(this, "\n\nSearch Field should not be empty.", "Does Not Allow Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            String name = userName.Text.Substring(0, userName.Text.IndexOf('('));
+            String phone = userName.Text.Substring(userName.Text.IndexOf('(') + 1, 10);
+            getCustomerDetails(name, phone);
+            getCustomerSalesDetails(name,phone);
+            userGrid.DataSource = crudAction.SearchCustomerByName(name,phone);
+            
         }
-
-        //private void metroButton4_Click(object sender, EventArgs e)
-        //{
-        //    allBillGrid.DataSource = crudAction.BillDetailsById(metroTextBox4.Text);
-        //    MetroFramework.MetroMessageBox.Show(this, "\n\nSuccess.", "View All", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        //}
+        private void getCustomerSalesDetails(String name, String phone){
+            var cnn = action.getConnection();
+            cnn.Open();
+            String sql = "";
+            if (name == "ALL" && phone == "ALL")
+            {
+                sql = " or 1=1 ";
+            }
+            SqlCommand cmd = new SqlCommand(@"
+                             select sum(total_amnt) as BillAmount,sum(S.amnt_paid) as amnt_paid,
+                             sum(S.current_sales_balance) as current_sales_balance
+                             from M_S_CUSTOMERS C
+                             inner join T_D_SALES S on C.cust_id = S.customer_id and isnull(S.is_delete,0)=0
+                             where customer_name='" + name + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 "+ sql, cnn);
+            SqlDataReader reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                txt_total_amount.Text = reader["BillAmount"].ToString();
+                txt_total_amount_paid.Text = reader["amnt_paid"].ToString();
+                txt_total_pending_amount.Text = reader["current_sales_balance"].ToString();
+                txt_total_amount.Visible = true;
+                txt_total_amount_paid.Visible = true;
+                txt_total_pending_amount.Visible = true;
+                lbl_total_amount.Visible = true;
+                lbl_total_amount_paid.Visible = true;
+                lbl_total_pending_amount.Visible = true;
+            }
+            else
+            {
+                txt_total_amount.Visible = false;
+                txt_total_amount_paid.Visible = false;
+                txt_total_pending_amount.Visible = false;
+                lbl_total_amount.Visible = false;
+                lbl_total_amount_paid.Visible = false;
+                lbl_total_pending_amount.Visible = false;
+                //
+            }
+            cnn.Close();
+        }
+        private void getCustomerDetails(String name,String phone) {
+            var cnn = action.getConnection();
+            cnn.Open();
+            String sql = "";
+            if (name == "ALL" && phone == "ALL") {
+                sql = " or 1=1 ";
+            }
+            SqlCommand cmd = new SqlCommand(@"select customer_name,customer_phone,customer_email,
+                                              customer_address,special_discount_cash,special_discount_perc from M_S_CUSTOMERS C 
+                                              where customer_name='" + name + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 "+ sql, cnn);
+            SqlDataReader reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                lbl_name.Text = reader["customer_name"].ToString();
+                lbl_address.Text = reader["customer_address"].ToString();
+                lbl_details.Text = reader["customer_phone"].ToString() + ", " + reader["customer_email"].ToString();
+                lbl_name.Visible = true;
+                lbl_details.Visible = true;
+                lbl_address.Visible = true;
+            }
+            else
+            {
+                lbl_name.Visible = false;
+                lbl_details.Visible = false;
+                lbl_address.Visible = false;
+                MetroFramework.MetroMessageBox.Show(this, "\n\nCustomer Not Found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            cnn.Close();
+        }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
@@ -237,7 +307,7 @@ namespace Faa
             var source = new AutoCompleteStringCollection();
             source.AddRange(postSource);
             txt_product_search.AutoCompleteCustomSource = source;
-            txt_product_search.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            txt_product_search.AutoCompleteMode = AutoCompleteMode.Suggest;
             txt_product_search.AutoCompleteSource = AutoCompleteSource.CustomSource;
         }
 
@@ -247,10 +317,10 @@ namespace Faa
             var source = new AutoCompleteStringCollection();
             source.AddRange(postSource);
             customerName.AutoCompleteCustomSource = source;
-            customerName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            customerName.AutoCompleteMode = AutoCompleteMode.Suggest;
             customerName.AutoCompleteSource = AutoCompleteSource.CustomSource;
             userName.AutoCompleteCustomSource = source;
-            userName.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+            userName.AutoCompleteMode = AutoCompleteMode.Suggest;
             userName.AutoCompleteSource = AutoCompleteSource.CustomSource;
         }
 
@@ -547,6 +617,23 @@ namespace Faa
             receivedAmount.Text = "";
             pendingAmount.Text = "";
             state.SelectedValue = "";
+        }
+
+        private void label8_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txt_total_amount_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btn_viewAll_Click(object sender, EventArgs e)
+        {
+            userGrid.DataSource = crudAction.SearchCustomerByName("ALL", "ALL");
+            getCustomerDetails("ALL", "ALL");
+            getCustomerSalesDetails("ALL", "ALL");
         }
     }
 }

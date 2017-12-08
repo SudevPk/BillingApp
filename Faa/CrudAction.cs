@@ -24,7 +24,6 @@ namespace Faa
         }
 
         private Random gen = new Random();
-
         private DateTime RandomDay()
         {
             DateTime start = new DateTime(1995, 1, 1);
@@ -87,7 +86,7 @@ namespace Faa
             DataTable dtUsers = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select customer_name from M_S_CUSTOMERS", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select customer_name+'('+customer_phone+')' as customer_name,cust_id from M_S_CUSTOMERS where isNull(is_delete,0) = 0", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -184,15 +183,37 @@ namespace Faa
             }
         }
 
-        public DataTable SearchCustomerByName(string customerName)
+        public DataTable SearchCustomerByName(string customerName,String phone)
         {
             DataTable dataTable = new DataTable();
+            String sql = "";
+            if (customerName == "ALL" && phone == "ALL")
+            {
+                sql = " select  ROW_NUMBER() over(order by C.cust_id asc) as SlNo, " +
+                        " C.customer_name+'('+C.customer_phone+')' as Customer, " +
+                        " count(S.sales_id) as NoOfInvoice, " +
+                        " sum(S.total_amnt) as TotalAmount, " +
+                        " sum(S.amnt_paid) as TotalPaid, " +
+                        " sum(S.current_sales_balance) TotalBalance " +
+                        " from M_S_CUSTOMERS C " +
+                        " inner join T_D_SALES S on C.cust_id = S.customer_id and isnull(S.is_delete, 0) = 0 " +
+                        " where isNull(C.is_delete,0) = 0 " +
+                        " group by C.customer_name+'('+C.customer_phone+')',C.cust_id   " +
+                        " order by TotalBalance desc";
+            }
+            else {
+                sql = " select  ROW_NUMBER() over(order by S.sales_id asc) as SlNo, " +
+                        " cast(S.sales_date as date) as Date,S.sales_id as InvoiceNo,total_amnt as BillAmount,S.amnt_paid as Paid, " +
+                        " S.current_sales_balance as Pending " +
+                        " from M_S_CUSTOMERS C " +
+                        " inner join T_D_SALES S on C.cust_id = S.customer_id and isnull(S.is_delete, 0) = 0 " +
+                        " where customer_name = '" + customerName + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 " +
+                        " order by S.sales_date ";
+            }
             using (var cnn = action.getConnection())
             {
                 cnn.Open();
-                using (SqlCommand cmd = new SqlCommand(@"select  customer_name as Name,customer_phone as Phone,
-                                        customer_email as Email,customer_address as Address,created_date 'Created Date' from M_S_CUSTOMERS
-                                        where customer_name='" + customerName + "'", cnn))
+                using (SqlCommand cmd = new SqlCommand(@sql, cnn)) 
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
