@@ -30,7 +30,6 @@ namespace Faa
 
         public frmHome()
         {
-
             InitializeComponent();
             AutoCompleteProducts();
             AutoCompleteUsers();
@@ -92,17 +91,19 @@ namespace Faa
 
         private void metroButton3_Click(object sender, EventArgs e)
         {
-            if (userName.Text.ToString().Length<=0) {
+            if (userName.Text.ToString().Length <= 0)
+            {
                 MetroFramework.MetroMessageBox.Show(this, "\n\nSearch Field should not be empty.", "Does Not Allow Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             String name = userName.Text.Substring(0, userName.Text.IndexOf('('));
             String phone = userName.Text.Substring(userName.Text.IndexOf('(') + 1, 10);
             getCustomerDetails(name, phone);
-            getCustomerSalesDetails(name,phone);
-            userGrid.DataSource = crudAction.SearchCustomerByName(name,phone);
-            
+            getCustomerSalesDetails(name, phone);
+            userGrid.DataSource = crudAction.SearchCustomerByName(name, phone);
         }
-        private void getCustomerSalesDetails(String name, String phone){
+
+        private void getCustomerSalesDetails(String name, String phone)
+        {
             var cnn = action.getConnection();
             cnn.Open();
             String sql = "";
@@ -115,7 +116,7 @@ namespace Faa
                              sum(S.current_sales_balance) as current_sales_balance
                              from M_S_CUSTOMERS C
                              inner join T_D_SALES S on C.cust_id = S.customer_id and isnull(S.is_delete,0)=0
-                             where customer_name='" + name + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 "+ sql, cnn);
+                             where customer_name='" + name + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 " + sql, cnn);
             SqlDataReader reader = cmd.ExecuteReader();
             if (reader.Read())
             {
@@ -141,16 +142,19 @@ namespace Faa
             }
             cnn.Close();
         }
-        private void getCustomerDetails(String name,String phone) {
+
+        private void getCustomerDetails(String name, String phone)
+        {
             var cnn = action.getConnection();
             cnn.Open();
             String sql = "";
-            if (name == "ALL" && phone == "ALL") {
+            if (name == "ALL" && phone == "ALL")
+            {
                 sql = " or 1=1 ";
             }
             SqlCommand cmd = new SqlCommand(@"select customer_name,customer_phone,customer_email,
-                                              customer_address,special_discount_cash,special_discount_perc from M_S_CUSTOMERS C 
-                                              where customer_name='" + name + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 "+ sql, cnn);
+                                              customer_address,special_discount_cash,special_discount_perc from M_S_CUSTOMERS C
+                                              where customer_name='" + name + "' and customer_phone = '" + phone + "' and isNull(C.is_delete,0) = 0 " + sql, cnn);
             SqlDataReader reader = cmd.ExecuteReader();
             if (reader.Read())
             {
@@ -429,6 +433,7 @@ namespace Faa
         private void metroButton1_Click(object sender, EventArgs e)
         {
             bool isVaid = validateBill();
+            isVaid = true;
             if (isVaid)
             {
                 DataTable billDataTable = new DataTable();
@@ -474,6 +479,7 @@ namespace Faa
                         DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
                     var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
                     crudAction.exportExcel(billDataTable, filename);
+                    printDocument1.Print();
                     MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -621,12 +627,10 @@ namespace Faa
 
         private void label8_Click(object sender, EventArgs e)
         {
-
         }
 
         private void txt_total_amount_TextChanged(object sender, EventArgs e)
         {
-
         }
 
         private void btn_viewAll_Click(object sender, EventArgs e)
@@ -634,6 +638,24 @@ namespace Faa
             userGrid.DataSource = crudAction.SearchCustomerByName("ALL", "ALL");
             getCustomerDetails("ALL", "ALL");
             getCustomerSalesDetails("ALL", "ALL");
+        }
+
+        private void printDocument1_PrintPage(object sender, PrintPageEventArgs e)
+        {
+            Bitmap dataGridViewImage = new Bitmap(this.billGrid.Width, this.billGrid.Height);
+            billGrid.DrawToBitmap(dataGridViewImage, new Rectangle(0, 0, this.billGrid.Width, this.billGrid.Height));
+            e.Graphics.DrawImage(dataGridViewImage, 0, 0);
+        }
+
+        private void customerName_TextChanged(object sender, EventArgs e)
+        {
+            System.Data.DataTable dt = crudAction.AutoCompleteBillDetails(customerName.Text);
+            if (dt.Rows.Count > 0)
+            {
+                customerName.Text = dt.Rows[0]["customer_name"].ToString();
+                address.Text = dt.Rows[0]["customer_address"].ToString();
+                email.Text = dt.Rows[0]["customer_email"].ToString();
+            }
         }
     }
 }
