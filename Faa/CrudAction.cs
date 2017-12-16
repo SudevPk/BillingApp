@@ -24,6 +24,7 @@ namespace Faa
         }
 
         private Random gen = new Random();
+
         private DateTime RandomDay()
         {
             DateTime start = new DateTime(1995, 1, 1);
@@ -132,7 +133,7 @@ namespace Faa
             DataTable dtUsers = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select customer_name,customer_phone,customer_email,customer_address from M_S_CUSTOMERS where customer_phone='" + mobileNumber + "'", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select cust_id,customer_name,customer_phone,customer_email,customer_address from M_S_CUSTOMERS where customer_name+'(' +customer_phone+')' ='" + mobileNumber + "'", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -183,7 +184,7 @@ namespace Faa
             }
         }
 
-        public DataTable SearchCustomerByName(string customerName,String phone)
+        public DataTable SearchCustomerByName(string customerName, String phone)
         {
             DataTable dataTable = new DataTable();
             String sql = "";
@@ -201,7 +202,8 @@ namespace Faa
                         " group by C.customer_name+'('+C.customer_phone+')',C.cust_id   " +
                         " order by TotalBalance desc";
             }
-            else {
+            else
+            {
                 sql = " select  ROW_NUMBER() over(order by S.sales_id asc) as SlNo, " +
                         " cast(S.sales_date as date) as Date,S.sales_id as InvoiceNo,total_amnt as BillAmount,S.amnt_paid as Paid, " +
                         " S.current_sales_balance as Pending " +
@@ -213,7 +215,7 @@ namespace Faa
             using (var cnn = action.getConnection())
             {
                 cnn.Open();
-                using (SqlCommand cmd = new SqlCommand(@sql, cnn)) 
+                using (SqlCommand cmd = new SqlCommand(@sql, cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -336,6 +338,102 @@ namespace Faa
             {
                 wb.Worksheets.Add(dt, "Data");
                 wb.SaveAs(filename, false);
+            }
+        }
+
+        public void AddUser(string customerName, string mobileNumber, string email, string address)
+        {
+            using (var cnn = action.getConnection())
+            {
+                cnn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"INSERT INTO [dbo].[M_S_CUSTOMERS]
+                                                            ([customer_name]
+                                                            ,[customer_phone]
+                                                            ,[customer_email]
+                                                            ,[customer_address]
+                                                            ,[created_date]
+                                                            ,[is_delete])
+                                                        VALUES
+                                                            ('" + customerName + "','" + mobileNumber + "','" + email + "','" + address + "','" + DateTime.Now + "',0)"
+                                                            , cnn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public int AddSales(string p1, string p2, string p3, string p4, string p5)
+        {
+            DataTable dtUsers = new DataTable();
+            using (var cnn = action.getConnection())
+            {
+                cnn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"INSERT INTO [dbo].[T_D_SALES]
+                                                            ([sales_date]
+                                                            ,[customer_id]
+                                                            ,[total_amnt]
+                                                            ,[amnt_paid]
+                                                            ,[current_sales_balance]
+                                                            ,[last_updated]
+                                                            ,[is_delete])
+                                                        VALUES
+                                                            ('" + Convert.ToDateTime(p1) + "','" + p2 + "','" + p3 + "','" + p4 + "','" + p5 + "','" + DateTime.Now + "',0);SELECT sales_id from [dbo].[T_D_SALES] where sales_id=SCOPE_IDENTITY();", cnn))
+                {
+                    // create data adapter
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    // this will query your database and return the result to your datatable
+                    da.Fill(dtUsers);
+                    if (dtUsers.Rows.Count > 0)
+                    {
+                        return Convert.ToInt32(dtUsers.Rows[0]["sales_id"]);
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+
+                    //use LINQ method syntax to pull the Title field from a DT into a string array...
+                }
+            }
+        }
+
+        public void AddSaleitems(DataTable billDataTable)
+        {
+            string conString = "Data Source=" + System.Environment.MachineName + @"\sqlexpress;Initial Catalog=faa;Integrated Security=True";
+            using (var bulkCopy = new SqlBulkCopy(conString, SqlBulkCopyOptions.KeepIdentity))
+            {
+                // my DataTable column names match my SQL Column names, so I simply made this loop. However if your column names don't match, just pass in which datatable name matches the SQL column name in Column Mappings
+                foreach (DataColumn col in billDataTable.Columns)
+                {
+                    bulkCopy.ColumnMappings.Add(col.ColumnName, col.ColumnName);
+                }
+
+                bulkCopy.BulkCopyTimeout = 600;
+                bulkCopy.DestinationTableName = "T_D_SALES_ITEMS";
+                bulkCopy.WriteToServer(billDataTable);
+            }
+        }
+
+        public string GetSalesId()
+        {
+            using (var cnn = action.getConnection())
+            {
+                DataTable dtUsers = new DataTable();
+                cnn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"select MAX(sales_id) sales_id from T_D_SALES", cnn))
+                {
+                    // create data adapter
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    // this will query your database and return the result to your datatable
+                    da.Fill(dtUsers);
+                    if (dtUsers.Rows.Count > 0)
+                    {
+                        return dtUsers.Rows[0]["sales_id"].ToString();
+                    }
+                    else
+                        return "";
+                    //use LINQ method syntax to pull the Title field from a DT into a string array...
+                }
             }
         }
     }

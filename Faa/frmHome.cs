@@ -34,6 +34,8 @@ namespace Faa
             AutoCompleteProducts();
             AutoCompleteUsers();
             AutoCompleteUserMobile();
+            var salesId = crudAction.GetSalesId();
+            saleId.Text = salesId == "" ? "1" : salesId;
             this.billGrid.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
         }
 
@@ -436,55 +438,72 @@ namespace Faa
             isVaid = true;
             if (isVaid)
             {
-                DataTable billDataTable = new DataTable();
-                billDataTable.Clear();
-                billDataTable.Columns.Add("Item");
-                billDataTable.Columns.Add("Quantity");
-                billDataTable.Columns.Add("RatePerItem");
-                billDataTable.Columns.Add("Discount");
-                billDataTable.Columns.Add("GSTRate");
-                billDataTable.Columns.Add("Total");
-                billDataTable.Columns.Add("TotalAmount");
-                billDataTable.Columns.Add("Sale Date");
-                billDataTable.Columns.Add("Grand Total");
-                billDataTable.Columns.Add("Recieved");
-                billDataTable.Columns.Add("Pending");
                 if (billGrid.Rows.Count != 1)
                 {
-                    DataRow row = billDataTable.NewRow();
-                    for (int item = 0; item < billGrid.Rows.Count - 1; item++)
+                    DataTable billDataTable = new DataTable();
+                    billDataTable.Clear();
+                    //Preparing Data for T_D_SALES
+                    int salesId = crudAction.AddSales(saleDate.Text, userId.Text, grandTotal.Text, receivedAmount.Text, pendingAmount.Text);
+                    //Preparing Data for T_D_SALES
+                    billDataTable.Columns.Add("sales_id");
+                    //billDataTable.Columns.Add("sales_item_id");
+                    billDataTable.Columns.Add("item_code");
+                    billDataTable.Columns.Add("item_name");
+                    billDataTable.Columns.Add("item_qty");
+                    billDataTable.Columns.Add("item_price_per_piece");
+                    billDataTable.Columns.Add("c_gst");
+                    billDataTable.Columns.Add("s_gst");
+                    billDataTable.Columns.Add("total");
+                    //billDataTable.Columns.Add("item_added_time");
+                    billDataTable.Columns.Add("last_updated");
+                    billDataTable.Columns.Add("is_delete");
+
+                    if (billGrid.Rows.Count != 1)
                     {
-                        row = billDataTable.NewRow();
-                        row["Item"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
-                        row["Quantity"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
-                        row["RatePerItem"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
-                        row["GSTRate"] = this.billGrid.Rows[item].Cells["GSTRate"].Value.ToString();
-                        row["Discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
-                        row["Total"] = this.billGrid.Rows[item].Cells["Total"].Value.ToString();
-                        row["TotalAmount"] = this.billGrid.Rows[item].Cells["TotalAmount"].Value.ToString();
-                        billDataTable.Rows.Add(row);
+                        DataRow row = billDataTable.NewRow();
+                        for (int item = 0; item < billGrid.Rows.Count - 1; item++)
+                        {
+                            row = billDataTable.NewRow();
+                            row["sales_id"] = saleId.Text;
+                            row["item_name"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
+                            row["item_qty"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
+                            row["item_price_per_piece"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
+                            //row["GSTRate"] = this.billGrid.Rows[item].Cells["GSTRate"].Value.ToString();
+                            //row["Discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
+                            row["total"] = this.billGrid.Rows[item].Cells["Total"].Value.ToString();
+                            row["c_gst"] = 9;
+                            row["s_gst"] = 9;
+                            row["last_updated"] = DateTime.Now;
+                            row["is_delete"] = 0;
+                            row["item_code"] = "";
+                            billDataTable.Rows.Add(row);
+                        }
+                        //DataRow Lastrow = billDataTable.NewRow();
+                        //Lastrow["SaleId"] = salesId;
+                        //Lastrow["SaleDate"] = this.saleDate.Value;
+                        //Lastrow["GrandTotal"] = this.grandTotal.Text;
+                        //Lastrow["Recieved"] = this.receivedAmount.Text;
+                        //Lastrow["Pending"] = this.pendingAmount.Text;
+                        //billDataTable.Rows.Add(Lastrow);
+
+                        crudAction.AddSaleitems(billDataTable);
+
+                        var path = @"C:\faaExcel\Bill\";
+                        if (!File.Exists(path))
+                        {
+                            Directory.CreateDirectory(path);
+                        }
+                        var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
+                            DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
+                        var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
+                        crudAction.exportExcel(billDataTable, filename);
+                        printDocument1.Print();
+                        MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
-                    DataRow Lastrow = billDataTable.NewRow();
-                    Lastrow["Sale Date"] = this.saleDate.Value;
-                    Lastrow["Grand Total"] = this.grandTotal.Text;
-                    Lastrow["Recieved"] = this.receivedAmount.Text;
-                    Lastrow["Pending"] = this.pendingAmount.Text;
-                    billDataTable.Rows.Add(Lastrow);
-                    var path = @"C:\faaExcel\Bill\";
-                    if (!File.Exists(path))
+                    else
                     {
-                        Directory.CreateDirectory(path);
+                        MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
-                    var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
-                        DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
-                    var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
-                    crudAction.exportExcel(billDataTable, filename);
-                    printDocument1.Print();
-                    MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -591,18 +610,6 @@ namespace Faa
             }
         }
 
-        private void Billing_SelectedIndexChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void metroTabPage7_Click(object sender, EventArgs e)
-        {
-        }
-
-        private void metroButton14_Click(object sender, EventArgs e)
-        {
-        }
-
         private void metroButton4_Click(object sender, EventArgs e)
         {
             ClearAll();
@@ -623,14 +630,6 @@ namespace Faa
             receivedAmount.Text = "";
             pendingAmount.Text = "";
             state.SelectedValue = "";
-        }
-
-        private void label8_Click(object sender, EventArgs e)
-        {
-        }
-
-        private void txt_total_amount_TextChanged(object sender, EventArgs e)
-        {
         }
 
         private void btn_viewAll_Click(object sender, EventArgs e)
@@ -655,7 +654,53 @@ namespace Faa
                 customerName.Text = dt.Rows[0]["customer_name"].ToString();
                 address.Text = dt.Rows[0]["customer_address"].ToString();
                 email.Text = dt.Rows[0]["customer_email"].ToString();
+                userId.Text = dt.Rows[0]["cust_id"].ToString();
             }
+        }
+
+        private void metroButton5_Click_1(object sender, EventArgs e)
+        {
+            System.Data.DataTable dt = crudAction.BillDetailsById(saleId.Text);
+            if (dt.Rows.Count > 0)
+            {
+                //User Details
+                saleDate.Text = dt.Rows[0]["customer_name"].ToString();
+                customerName.Text = dt.Rows[0]["customer_name"].ToString();
+                city.Text = dt.Rows[0]["customer_name"].ToString();
+                companyName.Text = dt.Rows[0]["customer_name"].ToString();
+                address.Text = dt.Rows[0]["customer_name"].ToString();
+                email.Text = dt.Rows[0]["customer_name"].ToString();
+                state.Text = dt.Rows[0]["customer_name"].ToString();
+                district.Text = dt.Rows[0]["customer_name"].ToString();
+                userId.Text = dt.Rows[0]["customer_name"].ToString();
+
+                //Grid Details
+                billGrid.DataSource = dt;
+                //Total Details
+
+                totalQuantity.Text = dt.Rows[0]["customer_name"].ToString();
+                sumTotal.Text = dt.Rows[0]["customer_name"].ToString();
+                totalDiscount.Text = dt.Rows[0]["customer_name"].ToString();
+                grandTotal.Text = dt.Rows[0]["customer_name"].ToString();
+                receivedAmount.Text = dt.Rows[0]["customer_name"].ToString();
+                pendingAmount.Text = dt.Rows[0]["customer_address"].ToString();
+            }
+        }
+
+        private void metroButton2_Click(object sender, EventArgs e)
+        {
+            metroTabPage4.Show();
+            //userSearchPanel.Hide();
+            //userAddPanel.Show();
+        }
+
+        private void addUser_Click(object sender, EventArgs e)
+        {
+            crudAction.AddUser(
+            addCustomerName.Text,
+            addMobile.Text,
+            addEmail.Text,
+            addAddress.Text);
         }
     }
 }

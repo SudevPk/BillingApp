@@ -19,14 +19,7 @@ namespace Faa
         public SqlConnection getConnection()
         {
             string conString = "";
-            if (System.Environment.MachineName == "DESKTOP-OL65NEI")
-            {
-                conString = ConfigurationManager.ConnectionStrings["ConnectionStringFaaDB"].ToString();
-            }
-            else
-            {
-                conString = @"Data Source=ANUGRAHAA\sqlexpress;Initial Catalog=faa;Integrated Security=True";
-            }
+            conString = "Data Source=" + System.Environment.MachineName + @"\sqlexpress;Initial Catalog=faa;Integrated Security=True";
             return new SqlConnection(conString);
         }
     }
