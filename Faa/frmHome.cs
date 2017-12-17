@@ -33,7 +33,7 @@ namespace Faa
             InitializeComponent();
             AutoCompleteProducts();
             AutoCompleteUsers();
-            AutoCompleteUserMobile();
+            //AutoCompleteUserMobile();
             var salesId = crudAction.GetSalesId();
             saleId.Text = salesId == "" ? "1" : salesId;
             this.billGrid.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
@@ -330,16 +330,16 @@ namespace Faa
             userName.AutoCompleteSource = AutoCompleteSource.CustomSource;
         }
 
-        private void AutoCompleteUserMobile()
-        {
-            string[] postSource = crudAction.AutoCompleteUserMobile();
-            var source = new AutoCompleteStringCollection();
-            source.AddRange(postSource);
-            mobileNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
-            mobileNumber.AutoCompleteCustomSource = source;
-            mobileNumber.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
-            mobileNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
-        }
+        //private void AutoCompleteUserMobile()
+        //{
+        //    string[] postSource = crudAction.AutoCompleteUserMobile();
+        //    var source = new AutoCompleteStringCollection();
+        //    source.AddRange(postSource);
+        //    mobileNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
+        //    mobileNumber.AutoCompleteCustomSource = source;
+        //    mobileNumber.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+        //    mobileNumber.AutoCompleteSource = AutoCompleteSource.CustomSource;
+        //}
 
         private void metroTile2_Click(object sender, EventArgs e)
         {
@@ -429,7 +429,7 @@ namespace Faa
 
         private void metroTextBox14_TextChanged_1(object sender, EventArgs e)
         {
-            pendingAmount.Text = (int.Parse(grandTotal.Text == "" ? "0" : grandTotal.Text) - int.Parse(receivedAmount.Text == "" ? "0" : receivedAmount.Text)).ToString();
+            pendingAmount.Text = (Convert.ToDecimal(grandTotal.Text == "" ? "0" : grandTotal.Text) - Convert.ToDecimal(receivedAmount.Text == "" ? "0" : receivedAmount.Text)).ToString();
         }
 
         private void metroButton1_Click(object sender, EventArgs e)
@@ -607,6 +607,7 @@ namespace Faa
                 customerName.Text = dt.Rows[0]["customer_name"].ToString();
                 address.Text = dt.Rows[0]["customer_address"].ToString();
                 email.Text = dt.Rows[0]["customer_email"].ToString();
+                mobileNumber.Text = dt.Rows[0]["customer_phone"].ToString();
             }
         }
 
@@ -630,6 +631,9 @@ namespace Faa
             receivedAmount.Text = "";
             pendingAmount.Text = "";
             state.SelectedValue = "";
+            billGrid.DataSource = null;
+            billGrid.Rows.Clear();
+            billGrid.Refresh();
         }
 
         private void btn_viewAll_Click(object sender, EventArgs e)
@@ -655,35 +659,48 @@ namespace Faa
                 address.Text = dt.Rows[0]["customer_address"].ToString();
                 email.Text = dt.Rows[0]["customer_email"].ToString();
                 userId.Text = dt.Rows[0]["cust_id"].ToString();
+                mobileNumber.Text = dt.Rows[0]["customer_phone"].ToString();
             }
         }
 
         private void metroButton5_Click_1(object sender, EventArgs e)
         {
-            System.Data.DataTable dt = crudAction.BillDetailsById(saleId.Text);
-            if (dt.Rows.Count > 0)
+            System.Data.DataTable UserDtatable = crudAction.UserDetailsByBillId(saleId.Text);
+            if (UserDtatable.Rows.Count > 0)
             {
                 //User Details
-                saleDate.Text = dt.Rows[0]["customer_name"].ToString();
-                customerName.Text = dt.Rows[0]["customer_name"].ToString();
-                city.Text = dt.Rows[0]["customer_name"].ToString();
-                companyName.Text = dt.Rows[0]["customer_name"].ToString();
-                address.Text = dt.Rows[0]["customer_name"].ToString();
-                email.Text = dt.Rows[0]["customer_name"].ToString();
-                state.Text = dt.Rows[0]["customer_name"].ToString();
-                district.Text = dt.Rows[0]["customer_name"].ToString();
-                userId.Text = dt.Rows[0]["customer_name"].ToString();
+                saleDate.Text = UserDtatable.Rows[0]["sales_date"].ToString();
+                userId.Text = UserDtatable.Rows[0]["cust_id"].ToString();
+                customerName.Text = UserDtatable.Rows[0]["customer_name"].ToString();
+                mobileNumber.Text = UserDtatable.Rows[0]["customer_phone"].ToString();
+                email.Text = UserDtatable.Rows[0]["customer_email"].ToString();
+                address.Text = UserDtatable.Rows[0]["customer_address"].ToString();
 
+                //city.Text = UserDtatable.Rows[0]["customer_name"].ToString();
+                //companyName.Text = UserDtatable.Rows[0]["customer_name"].ToString();
+                //state.Text = UserDtatable.Rows[0]["customer_name"].ToString();
+                //district.Text = UserDtatable.Rows[0]["customer_name"].ToString();
                 //Grid Details
-                billGrid.DataSource = dt;
+            }
+            System.Data.DataTable billDataTable = crudAction.BillDetailsById(saleId.Text);
+            if (billDataTable.Rows.Count > 0)
+            {
+                //Peparing Bill Grid
+                billGrid.DataSource = null;
+                billGrid.Rows.Clear();
+                billGrid.Refresh();
+                billGrid.DataSource = billDataTable;
+            }
+            System.Data.DataTable dt = crudAction.TotalDetailsById(saleId.Text);
+            if (UserDtatable.Rows.Count > 0)
+            {
                 //Total Details
-
-                totalQuantity.Text = dt.Rows[0]["customer_name"].ToString();
-                sumTotal.Text = dt.Rows[0]["customer_name"].ToString();
-                totalDiscount.Text = dt.Rows[0]["customer_name"].ToString();
-                grandTotal.Text = dt.Rows[0]["customer_name"].ToString();
-                receivedAmount.Text = dt.Rows[0]["customer_name"].ToString();
-                pendingAmount.Text = dt.Rows[0]["customer_address"].ToString();
+                //totalQuantity.Text = dt.Rows[0]["customer_name"].ToString();
+                //sumTotal.Text = dt.Rows[0]["customer_name"].ToString();
+                //totalDiscount.Text = dt.Rows[0]["customer_name"].ToString();
+                grandTotal.Text = dt.Rows[0]["total_amnt"].ToString();
+                receivedAmount.Text = dt.Rows[0]["amnt_paid"].ToString();
+                pendingAmount.Text = dt.Rows[0]["current_sales_balance"].ToString();
             }
         }
 

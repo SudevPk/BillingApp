@@ -133,7 +133,8 @@ namespace Faa
             DataTable dtUsers = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select cust_id,customer_name,customer_phone,customer_email,customer_address from M_S_CUSTOMERS where customer_name+'(' +customer_phone+')' ='" + mobileNumber + "'", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select cust_id,customer_name,customer_phone,customer_email,customer_address
+                                                from M_S_CUSTOMERS where customer_name+'(' +customer_phone+')' ='" + mobileNumber + "'", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -230,13 +231,13 @@ namespace Faa
 
         public DataTable BillDetailsById(string billId)
         {
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new DataTable("billGrid");
             using (var cnn = action.getConnection())
             {
                 cnn.Open();
-                using (SqlCommand cmd = new SqlCommand(@"select customer_name as Name,customer_phone as Mobile,customer_email as Email,sales_date
-                                             as 'Sale Date',total_amnt as 'Total Amount',amnt_paid as 'Amount paid',current_sales_balance as 'Balance' from T_D_SALES
-                                             T JOIN M_S_CUSTOMERS C ON T.customer_id=C.cust_id where customer_name='" + billId + "'", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select item_name as Item,item_qty as Quantity,item_price_per_piece as RatePerItem,total as Total,
+                                                        c_gst+s_gst as GSTRate,0 as Discount,0 as TotalAmount
+                                                        from T_D_SALES_ITEMS SI INNER JOIN T_D_SALES S on S.sales_id=SI.sales_id where S.sales_id='" + billId + "'", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -420,7 +421,7 @@ namespace Faa
             {
                 DataTable dtUsers = new DataTable();
                 cnn.Open();
-                using (SqlCommand cmd = new SqlCommand(@"select MAX(sales_id) sales_id from T_D_SALES", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select MAX(sales_id)+1 sales_id from T_D_SALES", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -433,6 +434,38 @@ namespace Faa
                     else
                         return "";
                     //use LINQ method syntax to pull the Title field from a DT into a string array...
+                }
+            }
+        }
+
+        public DataTable UserDetailsByBillId(string p)
+        {
+            DataTable dtUsers = new DataTable();
+            using (var cnn = action.getConnection())
+            {
+                cnn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"select  sales_date,cust_id,customer_name,customer_phone,customer_email,customer_address
+                                                           from [T_D_SALES] INNER JOIN M_S_CUSTOMERS ON customer_id=cust_id
+                                                            where sales_id=" + p + "", cnn))
+                {
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(dtUsers);
+                    return dtUsers;
+                }
+            }
+        }
+
+        public DataTable TotalDetailsById(string p)
+        {
+            DataTable dtUsers = new DataTable();
+            using (var cnn = action.getConnection())
+            {
+                cnn.Open();
+                using (SqlCommand cmd = new SqlCommand(@"select total_amnt,amnt_paid,current_sales_balance from T_D_SALES where sales_id=" + p + "", cnn))
+                {
+                    SqlDataAdapter da = new SqlDataAdapter(cmd);
+                    da.Fill(dtUsers);
+                    return dtUsers;
                 }
             }
         }
