@@ -27,16 +27,18 @@ namespace Faa
         private Action action = new Action();
         private CrudAction crudAction = new CrudAction();
         private UtilityAction utilityAction = new UtilityAction();
+        private AutoCompleteStringCollection productList = new AutoCompleteStringCollection();
 
         public frmHome()
         {
             InitializeComponent();
-            AutoCompleteProducts();
+            productList = AutoCompleteProducts();
             AutoCompleteUsers();
             //AutoCompleteUserMobile();
             var salesId = crudAction.GetSalesId();
             saleId.Text = salesId == "" ? "1" : salesId;
             this.billGrid.RowPostPaint += new System.Windows.Forms.DataGridViewRowPostPaintEventHandler(this.dgvUserDetails_RowPostPaint);
+            Billing.SelectedTab = metroTabPage1;
         }
 
         private void dgvUserDetails_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
@@ -307,7 +309,7 @@ namespace Faa
             }
         }
 
-        private void AutoCompleteProducts()
+        public AutoCompleteStringCollection AutoCompleteProducts()
         {
             string[] postSource = crudAction.AutoCompleteProducts();
             var source = new AutoCompleteStringCollection();
@@ -315,6 +317,7 @@ namespace Faa
             txt_product_search.AutoCompleteCustomSource = source;
             txt_product_search.AutoCompleteMode = AutoCompleteMode.Suggest;
             txt_product_search.AutoCompleteSource = AutoCompleteSource.CustomSource;
+            return source;
         }
 
         private void AutoCompleteUsers()
@@ -360,14 +363,17 @@ namespace Faa
             string GSTRate = "18";
             string Discount = "0";
             double grandTotal = 0;
+            int totalQuantity = 0;
+            Double sumTotal = 0;
+            int discountTotal = 0;
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = this.billGrid.Rows[e.RowIndex];
                 Item = isNullorEmpy(row.Cells["Item"].Value) == true ? row.Cells["Item"].Value.ToString() : "1";
-                if (Item == "Hard Tissue")
+                if (Item.ToLower() == "ht - hard tissue")
                     row.Cells["RatePerItem"].Value = 100;
                 else
-                    if (Item == "Soft Tissue")
+                    if (Item.ToLower() == "st - soft tissue")
                         row.Cells["RatePerItem"].Value = 50;
                 Quantity = isNullorEmpy(row.Cells["Quantity"].Value) == true ? row.Cells["Quantity"].Value.ToString() : "1";
                 RatePerItem = isNullorEmpy(row.Cells["RatePerItem"].Value) == true ? row.Cells["RatePerItem"].Value.ToString() : "1";
@@ -382,9 +388,15 @@ namespace Faa
             for (int i = 0; i < this.billGrid.Rows.Count - 1; i++)
             {
                 grandTotal += Convert.ToDouble(this.billGrid.Rows[i].Cells["TotalAmount"].Value);
+                totalQuantity += Convert.ToInt32(isNullorEmpy(this.billGrid.Rows[i].Cells["Quantity"].Value) == true ? this.billGrid.Rows[i].Cells["Quantity"].Value.ToString() : "1");
+                sumTotal += Convert.ToDouble(this.billGrid.Rows[i].Cells["Total"].Value);
+                discountTotal += Convert.ToInt32(this.billGrid.Rows[i].Cells["Discount"].Value);
             }
+            this.totalQuantity.Text = totalQuantity.ToString();
             this.grandTotal.Text = grandTotal.ToString();
             this.pendingAmount.Text = grandTotal.ToString();
+            this.sumTotal.Text = sumTotal.ToString();
+            this.totalDiscount.Text = discountTotal.ToString();
         }
 
         private bool isNullorEmpy(object value)
@@ -405,6 +417,16 @@ namespace Faa
                 if (tb != null)
                 {
                     tb.KeyPress += new KeyPressEventHandler(Column1_KeyPress);
+                }
+            }
+            else if (col == 0)
+            {
+                TextBox autoText = e.Control as TextBox;
+                if (autoText != null)
+                {
+                    autoText.AutoCompleteCustomSource = productList;
+                    autoText.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                    autoText.AutoCompleteSource = AutoCompleteSource.CustomSource;
                 }
             }
         }
@@ -435,7 +457,7 @@ namespace Faa
         private void metroButton1_Click(object sender, EventArgs e)
         {
             bool isVaid = validateBill();
-            isVaid = true;
+            //isVaid = true;
             if (isVaid)
             {
                 if (billGrid.Rows.Count != 1)
@@ -457,89 +479,85 @@ namespace Faa
                     //billDataTable.Columns.Add("item_added_time");
                     billDataTable.Columns.Add("last_updated");
                     billDataTable.Columns.Add("is_delete");
-
-                    if (billGrid.Rows.Count != 1)
+                    DataRow row = billDataTable.NewRow();
+                    for (int item = 0; item < billGrid.Rows.Count - 1; item++)
                     {
-                        DataRow row = billDataTable.NewRow();
-                        for (int item = 0; item < billGrid.Rows.Count - 1; item++)
-                        {
-                            row = billDataTable.NewRow();
-                            row["sales_id"] = saleId.Text;
-                            row["item_name"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
-                            row["item_qty"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
-                            row["item_price_per_piece"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
-                            //row["GSTRate"] = this.billGrid.Rows[item].Cells["GSTRate"].Value.ToString();
-                            //row["Discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
-                            row["total"] = this.billGrid.Rows[item].Cells["Total"].Value.ToString();
-                            row["c_gst"] = 9;
-                            row["s_gst"] = 9;
-                            row["last_updated"] = DateTime.Now;
-                            row["is_delete"] = 0;
-                            row["item_code"] = "";
-                            billDataTable.Rows.Add(row);
-                        }
-                        //DataRow Lastrow = billDataTable.NewRow();
-                        //Lastrow["SaleId"] = salesId;
-                        //Lastrow["SaleDate"] = this.saleDate.Value;
-                        //Lastrow["GrandTotal"] = this.grandTotal.Text;
-                        //Lastrow["Recieved"] = this.receivedAmount.Text;
-                        //Lastrow["Pending"] = this.pendingAmount.Text;
-                        //billDataTable.Rows.Add(Lastrow);
-
-                        crudAction.AddSaleitems(billDataTable);
-
-                        var path = @"C:\faaExcel\Bill\";
-                        if (!File.Exists(path))
-                        {
-                            Directory.CreateDirectory(path);
-                        }
-                        var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
-                            DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
-                        var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
-                        crudAction.exportExcel(billDataTable, filename);
-                        printDocument1.Print();
-                        MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        row = billDataTable.NewRow();
+                        row["sales_id"] = saleId.Text;
+                        row["item_name"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
+                        row["item_qty"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
+                        row["item_price_per_piece"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
+                        //row["GSTRate"] = this.billGrid.Rows[item].Cells["GSTRate"].Value.ToString();
+                        //row["Discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
+                        row["total"] = this.billGrid.Rows[item].Cells["Total"].Value.ToString();
+                        row["c_gst"] = 9;
+                        row["s_gst"] = 9;
+                        row["last_updated"] = DateTime.Now;
+                        row["is_delete"] = 0;
+                        row["item_code"] = "";
+                        billDataTable.Rows.Add(row);
                     }
-                    else
+                    //DataRow Lastrow = billDataTable.NewRow();
+                    //Lastrow["SaleId"] = salesId;
+                    //Lastrow["SaleDate"] = this.saleDate.Value;
+                    //Lastrow["GrandTotal"] = this.grandTotal.Text;
+                    //Lastrow["Recieved"] = this.receivedAmount.Text;
+                    //Lastrow["Pending"] = this.pendingAmount.Text;
+                    //billDataTable.Rows.Add(Lastrow);
+
+                    crudAction.AddSaleitems(billDataTable);
+
+                    var path = @"C:\faaExcel\Bill\";
+                    if (!File.Exists(path))
                     {
-                        MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        Directory.CreateDirectory(path);
                     }
+                    var currentDate = DateTime.Now.Day.ToString() + '_' + DateTime.Now.Month.ToString() + '_' + DateTime.Now.Year.ToString() + '_' +
+                        DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
+                    var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
+                    crudAction.exportExcel(billDataTable, filename);
+                    printDocument1.Print();
+                    MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MetroFramework.MetroMessageBox.Show(this, "Add a Product", "Cannot Be Empty", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
 
         private bool validateBill()
         {
-            if (companyName.Text == "")
-            {
-                MessageBox.Show("Enter Company Name !");
-                companyName.Focus();
-                return false;
-            }
-            else if (customerName.Text == "")
+            //if (companyName.Text == "")
+            //{
+            //    MessageBox.Show("Enter Company Name !");
+            //    companyName.Focus();
+            //    return false;
+            //}
+            if (customerName.Text == "")
             {
                 MessageBox.Show("Enter Customer Name !");
                 customerName.Focus();
                 return false;
             }
-            else if (mobileNumber.Text == "")
-            {
-                MessageBox.Show("Enter Mobile Number !");
-                mobileNumber.Focus();
-                return false;
-            }
-            else if (mobileNumber.Text.Length < 10)
-            {
-                MessageBox.Show("Enter Valid Mobile Number(10 numbers) !");
-                mobileNumber.Focus();
-                return false;
-            }
-            else if (address.Text == "")
-            {
-                MessageBox.Show("Enter Address !");
-                address.Focus();
-                return false;
-            }
+            //else if (mobileNumber.Text == "")
+            //{
+            //    MessageBox.Show("Enter Mobile Number !");
+            //    mobileNumber.Focus();
+            //    return false;
+            //}
+            //else if (mobileNumber.Text.Length < 10)
+            //{
+            //    MessageBox.Show("Enter Valid Mobile Number(10 numbers) !");
+            //    mobileNumber.Focus();
+            //    return false;
+            //}
+            //else if (address.Text == "")
+            //{
+            //    MessageBox.Show("Enter Address !");
+            //    address.Focus();
+            //    return false;
+            //}
             else
             {
                 return true;
@@ -706,7 +724,7 @@ namespace Faa
 
         private void metroButton2_Click(object sender, EventArgs e)
         {
-            metroTabPage4.Show();
+            Billing.SelectedTab = metroTabPage4;
             //userSearchPanel.Hide();
             //userAddPanel.Show();
         }
@@ -718,6 +736,8 @@ namespace Faa
             addMobile.Text,
             addEmail.Text,
             addAddress.Text);
+            MetroFramework.MetroMessageBox.Show(this, "User", "Customer Added Successfully", MessageBoxButtons.OK, MessageBoxIcon.None);
+            Billing.SelectedTab = metroTabPage2;
         }
     }
 }

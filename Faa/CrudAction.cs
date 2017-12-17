@@ -302,7 +302,7 @@ namespace Faa
             DataTable dtUsers = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select product_name from M_S_PRODUCT", cnn))
+                using (SqlCommand cmd = new SqlCommand(@"select product_code+' - '+product_name as product_name from M_S_PRODUCT", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
