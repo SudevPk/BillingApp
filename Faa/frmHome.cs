@@ -476,8 +476,9 @@ namespace Faa
                     billDataTable.Columns.Add("c_gst");
                     billDataTable.Columns.Add("s_gst");
                     billDataTable.Columns.Add("total");
-                    //billDataTable.Columns.Add("item_added_time");
-                    billDataTable.Columns.Add("last_updated");
+                    billDataTable.Columns.Add("item_discount");
+                    billDataTable.Columns.Add("updated_date");
+                    billDataTable.Columns.Add("created_date");
                     billDataTable.Columns.Add("is_delete");
                     DataRow row = billDataTable.NewRow();
                     for (int item = 0; item < billGrid.Rows.Count - 1; item++)
@@ -487,12 +488,12 @@ namespace Faa
                         row["item_name"] = this.billGrid.Rows[item].Cells["Item"].Value.ToString();
                         row["item_qty"] = this.billGrid.Rows[item].Cells["Quantity"].Value == null ? "1" : this.billGrid.Rows[item].Cells["Quantity"].Value.ToString();
                         row["item_price_per_piece"] = this.billGrid.Rows[item].Cells["RatePerItem"].Value.ToString();
-                        //row["GSTRate"] = this.billGrid.Rows[item].Cells["GSTRate"].Value.ToString();
-                        //row["Discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
+                        row["item_discount"] = this.billGrid.Rows[item].Cells["Discount"].Value == null ? "0" : this.billGrid.Rows[item].Cells["Discount"].Value.ToString();
                         row["total"] = this.billGrid.Rows[item].Cells["Total"].Value.ToString();
                         row["c_gst"] = 9;
                         row["s_gst"] = 9;
-                        row["last_updated"] = DateTime.Now;
+                        row["updated_date"] = DateTime.Now;
+                        row["created_date"] = DateTime.Now;
                         row["is_delete"] = 0;
                         row["item_code"] = "";
                         billDataTable.Rows.Add(row);
@@ -516,6 +517,7 @@ namespace Faa
                         DateTime.Now.TimeOfDay.ToString().Replace(":", "_").Replace(".", "_") + '_';
                     var filename = path + customerName.Text + currentDate + "_Bill.xlsx";
                     crudAction.exportExcel(billDataTable, filename);
+                    printDocument1.DefaultPageSettings.PaperSize = new PaperSize("bill", 20, 20);
                     printDocument1.Print();
                     MetroFramework.MetroMessageBox.Show(this, "Exported to \n" + filename, "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -626,6 +628,9 @@ namespace Faa
                 address.Text = dt.Rows[0]["customer_address"].ToString();
                 email.Text = dt.Rows[0]["customer_email"].ToString();
                 mobileNumber.Text = dt.Rows[0]["customer_phone"].ToString();
+                city.Text = dt.Rows[0]["customer_city"].ToString();
+                state.Text = dt.Rows[0]["customer_state"].ToString();
+                district.Text = dt.Rows[0]["customer_district"].ToString();
             }
         }
 
@@ -678,6 +683,9 @@ namespace Faa
                 email.Text = dt.Rows[0]["customer_email"].ToString();
                 userId.Text = dt.Rows[0]["cust_id"].ToString();
                 mobileNumber.Text = dt.Rows[0]["customer_phone"].ToString();
+                city.Text = dt.Rows[0]["customer_city"].ToString();
+                state.Text = dt.Rows[0]["customer_state"].ToString();
+                district.Text = dt.Rows[0]["customer_district"].ToString();
             }
         }
 
@@ -693,11 +701,9 @@ namespace Faa
                 mobileNumber.Text = UserDtatable.Rows[0]["customer_phone"].ToString();
                 email.Text = UserDtatable.Rows[0]["customer_email"].ToString();
                 address.Text = UserDtatable.Rows[0]["customer_address"].ToString();
-
-                //city.Text = UserDtatable.Rows[0]["customer_name"].ToString();
-                //companyName.Text = UserDtatable.Rows[0]["customer_name"].ToString();
-                //state.Text = UserDtatable.Rows[0]["customer_name"].ToString();
-                //district.Text = UserDtatable.Rows[0]["customer_name"].ToString();
+                city.Text = UserDtatable.Rows[0]["customer_city"].ToString();
+                state.Text = UserDtatable.Rows[0]["customer_state"].ToString();
+                district.Text = UserDtatable.Rows[0]["customer_district"].ToString();
                 //Grid Details
             }
             System.Data.DataTable billDataTable = crudAction.BillDetailsById(saleId.Text);
@@ -735,9 +741,21 @@ namespace Faa
             addCustomerName.Text,
             addMobile.Text,
             addEmail.Text,
-            addAddress.Text);
+            addAddress.Text,
+            addCity.Text,
+            addDistrict.Text,
+            addState.Text);
             MetroFramework.MetroMessageBox.Show(this, "User", "Customer Added Successfully", MessageBoxButtons.OK, MessageBoxIcon.None);
             Billing.SelectedTab = metroTabPage2;
+        }
+
+        private void billGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+        }
+
+        private void addMobile_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !char.IsDigit(e.KeyChar);
         }
     }
 }

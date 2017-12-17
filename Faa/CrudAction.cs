@@ -133,7 +133,8 @@ namespace Faa
             DataTable dtUsers = new DataTable();
             using (var cnn = action.getConnection())
             {
-                using (SqlCommand cmd = new SqlCommand(@"select cust_id,customer_name,customer_phone,customer_email,customer_address
+                using (SqlCommand cmd = new SqlCommand(@"select cust_id,customer_name,customer_phone,customer_email,customer_address,
+                                                    customer_city,customer_district,customer_state
                                                 from M_S_CUSTOMERS where customer_name+'(' +customer_phone+')' ='" + mobileNumber + "'", cnn))
                 {
                     // create data adapter
@@ -342,7 +343,7 @@ namespace Faa
             }
         }
 
-        public void AddUser(string customerName, string mobileNumber, string email, string address)
+        public void AddUser(string customerName, string mobileNumber, string email, string address, string city, string district, string state)
         {
             using (var cnn = action.getConnection())
             {
@@ -352,10 +353,16 @@ namespace Faa
                                                             ,[customer_phone]
                                                             ,[customer_email]
                                                             ,[customer_address]
+                                                            ,[customer_city]
+                                                            ,[customer_district]
+                                                            ,[customer_state]
                                                             ,[created_date]
+                                                            ,[updated_date]
                                                             ,[is_delete])
                                                         VALUES
-                                                            ('" + customerName + "','" + mobileNumber + "','" + email + "','" + address + "','" + DateTime.Now + "',0)"
+                                                            ('" + customerName + "','" + mobileNumber + "','" + email + "','" + address +
+                                                                 "','" + city + "','" + district + "','" + state + "','" +
+                                                                DateTime.Now + "','" + DateTime.Now + "',0)"
                                                             , cnn))
                 {
                     cmd.ExecuteNonQuery();
@@ -375,10 +382,12 @@ namespace Faa
                                                             ,[total_amnt]
                                                             ,[amnt_paid]
                                                             ,[current_sales_balance]
-                                                            ,[last_updated]
+                                                            ,[created_date]
+                                                            ,[updated_date]
                                                             ,[is_delete])
                                                         VALUES
-                                                            ('" + Convert.ToDateTime(p1) + "','" + p2 + "','" + p3 + "','" + p4 + "','" + p5 + "','" + DateTime.Now + "',0);SELECT sales_id from [dbo].[T_D_SALES] where sales_id=SCOPE_IDENTITY();", cnn))
+                                                            ('" + Convert.ToDateTime(p1) + "','" + p2 + "','" + p3 + "','" + p4 + "','" + p5 + "','" +
+                                                                DateTime.Now + "','" + DateTime.Now + "',0);SELECT sales_id from [dbo].[T_D_SALES] where sales_id=SCOPE_IDENTITY();", cnn))
                 {
                     // create data adapter
                     SqlDataAdapter da = new SqlDataAdapter(cmd);
@@ -400,7 +409,7 @@ namespace Faa
 
         public void AddSaleitems(DataTable billDataTable)
         {
-            string conString = "Data Source=" + System.Environment.MachineName + @"\sqlexpress;Initial Catalog=faa;Integrated Security=True";
+            string conString = "Data Source=" + System.Environment.MachineName + @"\sqlexpress;Initial Catalog=faaNew;Integrated Security=True";
             using (var bulkCopy = new SqlBulkCopy(conString, SqlBulkCopyOptions.KeepIdentity))
             {
                 // my DataTable column names match my SQL Column names, so I simply made this loop. However if your column names don't match, just pass in which datatable name matches the SQL column name in Column Mappings
@@ -445,6 +454,7 @@ namespace Faa
             {
                 cnn.Open();
                 using (SqlCommand cmd = new SqlCommand(@"select  sales_date,cust_id,customer_name,customer_phone,customer_email,customer_address
+                                                        customer_city,customer_district,customer_state
                                                            from [T_D_SALES] INNER JOIN M_S_CUSTOMERS ON customer_id=cust_id
                                                             where sales_id=" + p + "", cnn))
                 {

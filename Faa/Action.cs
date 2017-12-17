@@ -19,7 +19,7 @@ namespace Faa
         public SqlConnection getConnection()
         {
             string conString = "";
-            conString = "Data Source=" + System.Environment.MachineName + @"\sqlexpress;Initial Catalog=faa;Integrated Security=True";
+            conString = "Data Source=" + System.Environment.MachineName + @"\sqlexpress;Initial Catalog=faaNew;Integrated Security=True";
             return new SqlConnection(conString);
         }
     }
